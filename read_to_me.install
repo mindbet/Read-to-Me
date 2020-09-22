@@ -1,0 +1,82 @@
+<?php
+
+
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+
+// Install hook.
+/**
+ * Implements hook_install().
+ */
+function read_to_me_install() {
+
+
+
+
+  $entity_type         = 'node';
+  $bundle              = 'article';
+  $field['field_name'] = 'field_spoken_version'; // your field id
+
+    \Drupal::service('entity_display.repository')->getFormDisplay($entity_type, $bundle, 'default')
+    ->setComponent($field['field_name'], [
+      'type' => 'media_library_widget',
+      'weight' => '1',
+    ])
+    ->save();
+
+
+//  \Drupal::service('entity_display.repository')->getViewDisplay($entity_type, $bundle, 'default')
+//    ->setComponent($field['field_name'], [
+//      'type' => 'media_library_widget',
+//      'weight' => '1',
+//    ])
+//    ->save();
+
+
+
+
+//  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
+//  $form_display = \Drupal::entityTypeManager()
+//    ->getStorage('entity_form_display')
+//    ->load('node.article.default');
+//
+//  $form_display->setComponent('field_spoken_version', [
+//    'type' => 'entity_reference_autocomplete',
+//  ]);
+//
+//  $form_display->save();
+//
+
+
+
+
+}
+
+
+
+
+
+
+
+// Uninstall hook.
+/**
+ * Implements hook_uninstall().
+ */
+function read_to_me_uninstall() {
+  \Drupal::configFactory()->getEditable('core.entity_form_display.node.article.generate_audio')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_form_display.node.article.text_to_speak')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_form_mode.node.generate_audio')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_form_mode.node.text_to_speak')->delete();
+  \Drupal::configFactory()->getEditable('field.field.media.audio.field_entity_parent')->delete();
+  \Drupal::configFactory()->getEditable('field.field.node.article.field_script')->delete();
+  \Drupal::configFactory()->getEditable('field.field.node.article.field_spoken_version')->delete();
+  \Drupal::configFactory()->getEditable('field.storage.media.field_entity_parent')->delete();
+  \Drupal::configFactory()->getEditable('field.storage.node.field_script')->delete();
+  \Drupal::configFactory()->getEditable('field.storage.node.field_spoken_version')->delete();
+  \Drupal::configFactory()->getEditable('media.type.remote_audio')->delete();
+}
+
+
+
+
+
+

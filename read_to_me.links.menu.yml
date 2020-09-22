@@ -1,0 +1,5 @@
+read_to_me.settings:
+  title: 'Read to me settings'
+  parent: system.admin_config_media
+  description: 'Configure module.'
+  route_name: read_to_me.settings

@@ -1,0 +1,31 @@
+read_to_me.script.edit:
+  path: '/node/{node}/script'
+  defaults:
+    _entity_form: 'node.text_to_speak'
+    _title: 'Edit script'
+  requirements:
+    node: '\d+'
+    _entity_access: 'node.update'
+    _permission: 'access content'
+  options:
+    _admin_route: TRUE
+
+read_to_me.audio.generate:
+  path: '/node/{node}/audio'
+  defaults:
+    _entity_form: 'node.generate_audio'
+    _title: 'Generate Audio'
+  requirements:
+    node: '\d+'
+    _entity_access: 'node.update'
+    _permission: 'access content'
+  options:
+    _admin_route: TRUE
+
+read_to_me.settings:
+  path: '/admin/config/read-to-me/settings'
+  defaults:
+    _form: '\Drupal\read_to_me\Form\ReadToMeSettingsForm'
+    _title: 'Read to Me'
+  requirements:
+    _permission: 'administer site configuration'

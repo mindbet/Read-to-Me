@@ -1,0 +1,21 @@
+{
+    "name": "drupal/read_to_me",
+    "description": "Drupal integration with Amazon Polly",
+    "type": "drupal-module",
+    "homepage": "https://www.drupal.org/project/issues/read_to_me",
+    "authors": [
+        {
+            "name": "Philip Denlinger",
+            "email": "philipdenlinger@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/read_to_me"
+    },
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "require": {
+        "google/cloud-text-to-speech": "^0.5.0",
+        "aws/aws-sdk-php": "^3.18"
+    }
+}
