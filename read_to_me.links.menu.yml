@@ -3,3 +3,9 @@ read_to_me.settings:
   parent: system.admin_config_media
   description: 'Configure module.'
   route_name: read_to_me.settings
+
+read_to_me.voice.settings:
+  title: 'Read to me voice choices'
+  parent: read_to_me.settings
+  description: 'Set default voice settings.'
+  route_name: read_to_me.voice.settings

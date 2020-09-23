@@ -29,3 +29,17 @@ read_to_me.settings:
     _title: 'Read to Me'
   requirements:
     _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+read_to_me.voice.settings:
+  path: '/admin/config/read-to-me/settings/voice'
+  defaults:
+    _form: '\Drupal\read_to_me\Form\ReadToMeVoicesSettingsForm'
+    _title: 'Read to Me Voice Choices'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+

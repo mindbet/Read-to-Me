@@ -7,6 +7,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Language\LanguageManager;
 
+use Aws\Polly;
+use Aws\Credentials;
+
 /**
  * Configure example settings for this site.
  */
@@ -19,7 +22,6 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
    */
   public function getFormId() {
     return 'read_to_me_voices_admin_settings';
-
   }//end getFormId()
 
   /**
@@ -29,7 +31,6 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
    */
   protected function getEditableConfigNames() {
     return ['read_to_me.settings'];
-
   }//end getEditableConfigNames()
 
   /**
@@ -40,29 +41,97 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-  $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
-  $awsSecretKey = \Drupal::config('read_to_me.settings')->get('aws_secret_access_key');
+    $config = $this->config('read_to_me.settings');
 
-  $credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
-  $client         = new \Aws\Polly\PollyClient([
-    'version'     => '2016-06-10',
-    'credentials' => $credentials,
-    'region'      => 'us-east-1',
-  ]);
+    $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
+    $awsSecretKey = \Drupal::config('read_to_me.settings')->get('aws_secret_access_key');
 
+    $credentials = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
+    $client = new \Aws\Polly\PollyClient([
+      'version' => '2016-06-10',
+      'credentials' => $credentials,
+      'region' => 'us-east-1',
+    ]);
 
-  $langcodes = \Drupal::languageManager()->getLanguages();
-  $langcodesList = array_keys($langcodes);
+    $langcodes = \Drupal::languageManager()->getLanguages();
+    $langcodesList = array_keys($langcodes);
 
-  dpm($langcodesList);
+    dpm($langcodesList);
 
-  $result = $client->describeVoices([
-    'Engine' => 'standard',
-    'IncludeAdditionalLanguageCodes' => true,
-    'LanguageCode' => 'en-US',
-  ]);
+    $result = $client->describeVoices([
+      'Engine' => 'standard',
+      'IncludeAdditionalLanguageCodes' => TRUE,
+      'LanguageCode' => 'en-US',
+    ]);
 
-  dpm($result);
+    dpm($result);
+
+    $form['voice_selection'] = [
+      '#type'          => 'radios',
+      '#required'      => TRUE,
+      '#title'         => $this->t('Voice'),
+      '#description'   => $this->t('The synthetic voice to use for generation.'),
+      '#options' => [
+        'Ivy' => $this->t('Ivy <span>[Female, child, standard]</span>'),
+        'Joanna' => $this->t('Joanna <span>[Female, neural or standard, conversational or newscaster available]</span>'),
+        'Kendra' => $this->t('Kendra <span>[Female, standard]</span>'),
+        'Kimberly' => $this->t('Kimberly <span>[Female, standard]</span>'),
+        'Salli' => $this->t('Salli <span>[Female, standard]</span>'),
+        'Joey' => $this
+          ->t('Joey <span>[Male, standard]</span>'),
+        'Justin' => $this
+          ->t('Justin <span>[Male, child]</span>'),
+        'Kevin' => $this
+          ->t('Kevin <span>[Male, child, neural only]</span>'),
+        'Matthew' => $this
+          ->t('Matthew <span>[Male, neural or standard, conversational or newscaster available]</span>'),
+      ],
+      '#default_value' => $config->get('voice_selection'),
+
+    ];
+
+    $form['voice_generation'] = [
+      '#type'          => 'radios',
+      '#title'         => $this->t('Generation method'),
+      '#description'   => $this->t('Neural (more life-like) is $16 per million characters. Standard method is $4 per million characters.'),
+      '#options' => [
+        'neural' => $this->t('Neural'),
+        'standard' => $this->t('Standard'),
+      ],
+      '#default_value' => $config->get('voice_generation'),
+      '#states' => [
+        'visible' => [
+          array(':input[name="voice_selection"]' => array('value' => 'Joanna')),
+          array(':input[name="voice_selection"]' => array('value' => 'Matthew')),
+        ],
+      ],
+    ];
+
+    $form['voice_style'] = [
+      '#type'          => 'radios',
+      '#title'         => $this->t('Voice style'),
+      '#options' => array(
+        'newscaster' => $this
+          ->t('Newscaster'),
+        'conversational' => $this
+          ->t('Conversational'),
+        'nostyle' => $this
+          ->t('No applied style'),
+      ),
+      '#default_value' => $config->get('voice_style'),
+      '#states' => array(
+        'visible' => array(
+          array(
+            ':input[name="voice_selection"]' => array('value' => 'Joanna'),
+            ':input[name="voice_generation"]' => array('value' => 'neural'),
+          ),
+          array(
+            ':input[name="voice_selection"]' => array('value' => 'Matthew'),
+            ':input[name="voice_generation"]' => array('value' => 'neural'),
+          ),
+        ),
+      ),
+    ];
 
     return parent::buildForm($form, $form_state);
 
@@ -70,8 +139,6 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
   /**
    * Validate the form.
-   *
-   * @return errors
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
 
@@ -79,21 +146,16 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
   /**
    * Submits the form.
-   *
-   * @return form
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Retrieve and set the configuration.
     $voice_generation_value = ($form_state->getValue('voice_generation'));
     $voice_style_value = ($form_state->getValue('voice_style'));
     if ((!$form_state->getValue('voice_selection') === 'Joanna') and
-      (!$form_state->getValue('voice_selection') === 'Matthew'))
-    {
+      (!$form_state->getValue('voice_selection') === 'Matthew')) {
       unset($voice_generation_value);
       unset($voice_style_value);
     }
-
-
 
     $this->configFactory->getEditable('read_to_me.settings')
       ->set('key', $form_state->getValue('key'))
@@ -107,3 +169,5 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
   }//end submitForm()
+
+}

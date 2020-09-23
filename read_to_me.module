@@ -13,15 +13,6 @@ use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\media\Entity\Media;
 use \Drupal\file\Entity\File;
 
-
-
-use Google\Cloud\TextToSpeech\V1\AudioConfig;
-use Google\Cloud\TextToSpeech\V1\AudioEncoding;
-use Google\Cloud\TextToSpeech\V1\SsmlVoiceGender;
-use Google\Cloud\TextToSpeech\V1\SynthesisInput;
-use Google\Cloud\TextToSpeech\V1\TextToSpeechClient;
-use Google\Cloud\TextToSpeech\V1\VoiceSelectionParams;
-
 use Aws\Polly;
 use Aws\Credentials;
 
@@ -41,47 +32,11 @@ function read_to_me_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
-
-
-// Modifies
-/**
- * Implements hook_node_presave().
- */
-//
-//function read_to_me_polly_talk_presave(Drupal\Core\Entity\EntityInterface $node)
-//{
-//  // Make sure we only target nodes of type Song
-//  if($this->bundle() == 'polly_talk')
-//  {
-//    // Get the URI that the user submitted
-//    $uri = $this->get('field_url')->uri;
-//    // Create a File entity with the given $uri
-//    $file = File::Create(['uri' => $uri]);
-//    // Save the file
-//    $file->save();
-//    // Associate the new File with the field on the node
-//    $node->field_voicing->setValue(['target_id' => $file->id()]);
-//  }
-//}
-//
-
 // Modifies node_article_edit_form.
 /**
  * Implements hook_form_form_id_alter().
  */
 function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
-
-//  dpm($form_state->getFormObject()->getOperation());
-
-//
-//  if ($form_state->getFormObject()->getOperation() == 'edit') {
-//    $form['actions']['submit']['#submit'][] = '_read_to_me_node_submit_redirect';
-//  }
-
-  if ($form_state->getFormObject()->getOperation() == 'edit') {
-
-  }
-
 
   // This section of the form used for converting body field to script.
   if ($form_state->getFormObject()->getOperation() == 'text_to_speak') {
@@ -106,7 +61,6 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
     ];
 
     $form['actions']['submit']['#submit'][] = '_read_to_me_node_submit_redirect';
-
 
     /**
      * {@inheritdoc}
@@ -133,14 +87,7 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
       return $form['field_script'];
 
     }
-
-
-
   }
-
-
-
-
 
   // This section of the form used for converting script to audio file.
   if ($form_state->getFormObject()->getOperation() == 'generate_audio') {
@@ -158,10 +105,6 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
      */
     function convertoaudio() {
 
-//    private function convert_to_audio( $post_id, $sample_rate, $voice_id, $sentences, $wp_filesystem, $lang ) {
-
-
-
       // Get current node id.
       $currentNodeID = \Drupal::routeMatch()->getRawParameter('node');
 
@@ -173,22 +116,18 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
 
       // Set audio title from node title.
       $audiotitle = $node->get('title')->value;
-
+      // Convert to lower case.
       $audiotitle = preg_replace('@[^a-z0-9-]+@', '-', strtolower($audiotitle));
-
+      // Get current date and time for media label
       $createddate = new DrupalDateTime('now');
       $createddate = $createddate->format('Y-m-d_H-i');
-
+      // Build media label
       $audiotitle = $audiotitle . '_' . $createddate;
 
-
-
-
-
-      // AWS Polly section 2
-
+      // Prepare to send file to Amazon Polly
       $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
       $awsSecretKey = \Drupal::config('read_to_me.settings')->get('aws_secret_access_key');
+      $s3bucket = \Drupal::config('read_to_me.settings')->get('s3bucket');
       $voice_selection = \Drupal::config('read_to_me.settings')->get('voice_selection');
       $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
@@ -203,39 +142,28 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
           $pollyengine = 'neural';
         }
 
-
-
       $credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
       $client         = new \Aws\Polly\PollyClient([
         'version'     => '2016-06-10',
         'credentials' => $credentials,
         'region'      => 'us-east-1',
       ]);
-//      $result         = $client->synthesizeSpeech([
-      $result         = $client->StartSpeechSynthesisTask([
-        'Engine'       => $pollyengine,
-        'OutputS3BucketName' => 'pollytexttospeech2020',
 
-        'OutputFormat' => 'mp3',
-        'Text'         => $textproc,
+      $result          = $client->StartSpeechSynthesisTask([
+        'Engine'             => $pollyengine,
+        'OutputS3BucketName' => $s3bucket,
+        'OutputFormat'       => 'mp3',
+        'Text'               => $textproc,
 //        'SampleRate'   => '24000',
-        'TextType'     => 'text',
-        'VoiceId'      => $voice_selection,
+        'TextType'           => 'text',
+        'VoiceId'            => $voice_selection,
       ]);
-//      $resultData     = $result->get('AudioStream')->getContents();
-
 
 
             $resultData     = $result->get('SynthesisTask');
 
-      // end AWS Polly section 2
 
 dpm($resultData['OutputUri']);
-
-
-
-
-
 
       $media = Media::create([
         'bundle' => 'remote_audio',
@@ -253,17 +181,8 @@ dpm($resultData['OutputUri']);
         'target_id' => $media->id(),
       ]);
 
-
-
-
-      // Attach the media entity (the audio file).
-//      $node->field_spoken_version->setValue($resultData['OutputUri']);
-
       // Save the node.
       $node->save();
-
-      // Close the connection to Google Text to Speech.
-//      $client->close();
 
       return [
         '#markup' => t('Attachment added'),
@@ -273,18 +192,10 @@ dpm($resultData['OutputUri']);
 
   }
 
-
-
-
-
-
-
 }
 
 
-
-
-// This sets up the custom form mode for editing articles.
+// This sets up the custom form modes for creating scripts and converting to audio.
 /**
  * Implements hook_entity_type_build().
  */
@@ -294,19 +205,13 @@ function read_to_me_entity_type_build(array &$entity_types) {
 }
 
 
-
 /**
- * Extra node form submit handler. Done this way to override the default.
+ * Form submit handler used for script edit tab.
  */
-function _read_to_me_node_submit_redirect($form, &$form_state)
-{
+function _read_to_me_node_submit_redirect($form, &$form_state) {
   if (isset($_GET['destination'])) {
     unset($_GET['destination']);
   }
   $nodeid = $form_state->getformObject()->getEntity()->id();
   $form_state->setRedirect('read_to_me.script.edit', ['node' => $nodeid]);
 }
-
-
-
-

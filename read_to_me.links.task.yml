@@ -1,11 +1,24 @@
-read_to_me.settings:
+read_to_me.script.edit:
   title: Script
   route_name: read_to_me.script.edit
   weight: 200
   base_route: entity.node.canonical
 
-read_to_me.newaudio.generate:
+read_to_me.audio.generate:
   title: Audio
   route_name: read_to_me.audio.generate
   weight: 300
   base_route: entity.node.canonical
+
+read_to_me.settings:
+  title: 'AWS settings'
+  description: 'Configure module.'
+  weight: 100
+  route_name: read_to_me.settings
+  base_route: read_to_me.settings
+
+read_to_me.voice.settings:
+  title: Voices
+  route_name: read_to_me.voice.settings
+  weight: 200
+  base_route: read_to_me.settings

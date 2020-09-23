@@ -1,6 +1,5 @@
 <?php
 
-
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 
 // Install hook.
@@ -9,9 +8,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
  */
 function read_to_me_install() {
 
-
-
-
+  // Adds the field_spoken_version field to the node edit form
   $entity_type         = 'node';
   $bundle              = 'article';
   $field['field_name'] = 'field_spoken_version'; // your field id
@@ -22,42 +19,10 @@ function read_to_me_install() {
       'weight' => '1',
     ])
     ->save();
-
-
-//  \Drupal::service('entity_display.repository')->getViewDisplay($entity_type, $bundle, 'default')
-//    ->setComponent($field['field_name'], [
-//      'type' => 'media_library_widget',
-//      'weight' => '1',
-//    ])
-//    ->save();
-
-
-
-
-//  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
-//  $form_display = \Drupal::entityTypeManager()
-//    ->getStorage('entity_form_display')
-//    ->load('node.article.default');
-//
-//  $form_display->setComponent('field_spoken_version', [
-//    'type' => 'entity_reference_autocomplete',
-//  ]);
-//
-//  $form_display->save();
-//
-
-
-
-
 }
 
 
-
-
-
-
-
-// Uninstall hook.
+// Removes configuration when module is uninstalled
 /**
  * Implements hook_uninstall().
  */
@@ -74,9 +39,3 @@ function read_to_me_uninstall() {
   \Drupal::configFactory()->getEditable('field.storage.node.field_spoken_version')->delete();
   \Drupal::configFactory()->getEditable('media.type.remote_audio')->delete();
 }
-
-
-
-
-
-
