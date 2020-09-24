@@ -18,7 +18,8 @@ class ReadToMeSettingsForm extends ConfigFormBase {
   public function getFormId() {
     return 'read_to_me_admin_settings';
 
-  }//end getFormId()
+  //end getFormId()
+  }
 
   /**
    * Returns key to module settings.
@@ -28,7 +29,8 @@ class ReadToMeSettingsForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
     return ['read_to_me.settings'];
 
-  }//end getEditableConfigNames()
+  //end getEditableConfigNames()
+  }
 
   /**
    * Custom form.
@@ -64,13 +66,15 @@ class ReadToMeSettingsForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
-  }//end buildForm()
+  //end buildForm()
+  }
 
   /**
    * Validate the form.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-  }//end validateForm()
+  //end validateForm()
+  }
 
   /**
    * Submits the form.
@@ -85,6 +89,8 @@ class ReadToMeSettingsForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
 
-  }//end submitForm()
+  //end submitForm()
+  }
 
-}//end class
+//end class
+}

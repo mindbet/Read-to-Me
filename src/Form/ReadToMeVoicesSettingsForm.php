@@ -2,13 +2,14 @@
 
 namespace Drupal\read_to_me\Form;
 
+use Aws\Polly\PollyClient;
+use Aws\Credentials\Credentials;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Language\LanguageManager;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-use Aws\Polly;
-use Aws\Credentials;
 
 /**
  * Configure example settings for this site.
@@ -16,22 +17,49 @@ use Aws\Credentials;
 class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
   /**
-   * Returns formid.
+   * @var LanguageManagerInterface
+   */
+  protected $languageManager;
+
+
+  /**
+   * ReadToMeVoicesSettingsForm constructor.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, LanguageManagerInterface $language_manager) {
+    parent::__construct($config_factory);
+    $this->languageManager = $language_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('language_manager')
+      );
+  }
+
+
+  /**
    *
    * @return formid
+   * Returns formid.
    */
   public function getFormId() {
     return 'read_to_me_voices_admin_settings';
-  }//end getFormId()
+  //end getFormId()
+  }
 
   /**
-   * Returns key to module settings.
    *
    * @return settings
+   * Returns key to module settings.
    */
   protected function getEditableConfigNames() {
     return ['read_to_me.settings'];
-  }//end getEditableConfigNames()
+  //end getEditableConfigNames()
+  }
 
   /**
    * Custom form.
@@ -43,25 +71,70 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
     $config = $this->config('read_to_me.settings');
 
-    $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
-    $awsSecretKey = \Drupal::config('read_to_me.settings')->get('aws_secret_access_key');
+    $awsAccessKeyId = $this->config('read_to_me.settings')->get('aws_access_key_id');
+    $awsSecretKey = $this->config('read_to_me.settings')->get('aws_secret_access_key');
 
-    $credentials = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
-    $client = new \Aws\Polly\PollyClient([
+    $credentials = new Credentials($awsAccessKeyId, $awsSecretKey);
+    $client = new PollyClient([
       'version' => '2016-06-10',
       'credentials' => $credentials,
       'region' => 'us-east-1',
     ]);
 
-    $langcodes = \Drupal::languageManager()->getLanguages();
+
+//    $langcodes = \Drupal::languageManager()->getLanguages();
+    $langcodes = $this->languageManager->getLanguages();
+
     $langcodesList = array_keys($langcodes);
 
+//    $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $language = $this->languageManager->getCurrentLanguage()->getId();
+
+
+    $languagecrosswalk = [
+      'ar' => 'arb',
+      '' => 'cmn-CN',
+      'da' => 'da-DK',
+      'nl' => 'nl-NL',
+      'en' => 'en-AU',
+      'en' => 'en-GB',
+      'en' => 'en-IN',
+      'en' => 'en-US',
+      'en' => 'en-GB-WLS',
+      'fr' => 'fr-CA',
+      'fr' => 'fr-FR',
+      'de' => 'de-DE',
+      'hi' => 'hi-IN',
+      'is' => 'is-IS',
+      'es' => 'es-ES',
+      'es' => 'es-MX',
+      'es' => 'es-US',
+      'it' => 'it-IT',
+      'ja' => 'ja-JP',
+      'ko' => 'ko-KR',
+      'nb' => 'nb-NO',
+      'pl' => 'pl-PL',
+      'pt' => 'pt-BR',
+      'pt' => 'pt-PT',
+      'ro' => 'ro-RO',
+      'ru' => 'ru-RU',
+      'sv' => 'sv-SE',
+      'tr' => 'tr-TR',
+      'zh-hans' => 'tr-TR',
+      'zh-hant' => 'tr-TR',
+      '' => '',
+    ];
+
     dpm($langcodesList);
+
+    dpm($language);
+
+
 
     $result = $client->describeVoices([
       'Engine' => 'standard',
       'IncludeAdditionalLanguageCodes' => TRUE,
-      'LanguageCode' => 'en-US',
+      'LanguageCode' => 'da-DK',
     ]);
 
     dpm($result);
@@ -101,8 +174,8 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('voice_generation'),
       '#states' => [
         'visible' => [
-          array(':input[name="voice_selection"]' => array('value' => 'Joanna')),
-          array(':input[name="voice_selection"]' => array('value' => 'Matthew')),
+          [':input[name="voice_selection"]' => ['value' => 'Joanna']],
+          [':input[name="voice_selection"]' => ['value' => 'Matthew']],
         ],
       ],
     ];
@@ -110,39 +183,40 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     $form['voice_style'] = [
       '#type'          => 'radios',
       '#title'         => $this->t('Voice style'),
-      '#options' => array(
+      '#options' => [
         'newscaster' => $this
           ->t('Newscaster'),
         'conversational' => $this
           ->t('Conversational'),
         'nostyle' => $this
           ->t('No applied style'),
-      ),
+      ],
       '#default_value' => $config->get('voice_style'),
-      '#states' => array(
-        'visible' => array(
-          array(
-            ':input[name="voice_selection"]' => array('value' => 'Joanna'),
-            ':input[name="voice_generation"]' => array('value' => 'neural'),
-          ),
-          array(
-            ':input[name="voice_selection"]' => array('value' => 'Matthew'),
-            ':input[name="voice_generation"]' => array('value' => 'neural'),
-          ),
-        ),
-      ),
+      '#states' => [
+        'visible' => [
+          [
+            ':input[name="voice_selection"]' => ['value' => 'Joanna'],
+            ':input[name="voice_generation"]' => ['value' => 'neural'],
+          ],
+          [
+            ':input[name="voice_selection"]' => ['value' => 'Matthew'],
+            ':input[name="voice_generation"]' => ['value' => 'neural'],
+          ],
+        ],
+      ],
     ];
 
     return parent::buildForm($form, $form_state);
 
-  }//end buildForm()
+  //end buildForm()
+  }
 
   /**
    * Validate the form.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-
-  }//end validateForm()
+  //end validateForm()s
+  }
 
   /**
    * Submits the form.
@@ -169,5 +243,4 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
   }//end submitForm()
-
 }

@@ -5,16 +5,17 @@
  * Contains read_to_me.module.
  */
 
+use Aws\Polly\PollyClient;
+use Aws\Credentials\Credentials;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\media\Entity\Media;
-use \Drupal\file\Entity\File;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-use Aws\Polly;
-use Aws\Credentials;
 
 /**
  * Implements hook_help().
@@ -87,6 +88,7 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
       return $form['field_script'];
 
     }
+
   }
 
   // This section of the form used for converting script to audio file.
@@ -118,52 +120,51 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
       $audiotitle = $node->get('title')->value;
       // Convert to lower case.
       $audiotitle = preg_replace('@[^a-z0-9-]+@', '-', strtolower($audiotitle));
-      // Get current date and time for media label
+      // Get current date and time for media label.
       $createddate = new DrupalDateTime('now');
       $createddate = $createddate->format('Y-m-d_H-i');
-      // Build media label
+      // Build media label.
       $audiotitle = $audiotitle . '_' . $createddate;
 
-      // Prepare to send file to Amazon Polly
+      // Prepare to send file to Amazon Polly.
       $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
       $awsSecretKey = \Drupal::config('read_to_me.settings')->get('aws_secret_access_key');
       $s3bucket = \Drupal::config('read_to_me.settings')->get('s3bucket');
       $voice_selection = \Drupal::config('read_to_me.settings')->get('voice_selection');
-      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-      if (null !== \Drupal::config('read_to_me.settings')->get('voice_generation')) {
+      if (NULL !== \Drupal::config('read_to_me.settings')->get('voice_generation')) {
         $pollyengine = \Drupal::config('read_to_me.settings')
           ->get('voice_generation');
       }
-        else {
-          $pollyengine = 'standard';
-        };
-        if ($voice_selection === 'Kevin') {
-          $pollyengine = 'neural';
-        }
+      else {
+        $pollyengine = 'standard';
+      };
+      if ($voice_selection === 'Kevin') {
+        $pollyengine = 'neural';
+      }
 
-      $credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
-      $client         = new \Aws\Polly\PollyClient([
+      $credentials = new Credentials($awsAccessKeyId, $awsSecretKey);
+      $client      = new PollyClient([
         'version'     => '2016-06-10',
         'credentials' => $credentials,
         'region'      => 'us-east-1',
       ]);
 
-      $result          = $client->StartSpeechSynthesisTask([
+      $result = $client->StartSpeechSynthesisTask([
         'Engine'             => $pollyengine,
+//        'Engine'             => 'standard',
         'OutputS3BucketName' => $s3bucket,
         'OutputFormat'       => 'mp3',
         'Text'               => $textproc,
-//        'SampleRate'   => '24000',
+      // 'SampleRate'   => '24000',
         'TextType'           => 'text',
         'VoiceId'            => $voice_selection,
+//        'VoiceId'            => 'Mads',
       ]);
 
+      $resultData = $result->get('SynthesisTask');
 
-            $resultData     = $result->get('SynthesisTask');
-
-
-dpm($resultData['OutputUri']);
+      dpm($resultData['OutputUri']);
 
       $media = Media::create([
         'bundle' => 'remote_audio',
@@ -183,19 +184,14 @@ dpm($resultData['OutputUri']);
 
       // Save the node.
       $node->save();
-
-      return [
-        '#markup' => t('Attachment added'),
-      ];
-
+      return;
     }
 
   }
 
 }
 
-
-// This sets up the custom form modes for creating scripts and converting to audio.
+// Sets up the custom form modes for creating scripts and converting to audio.
 /**
  * Implements hook_entity_type_build().
  */
@@ -203,7 +199,6 @@ function read_to_me_entity_type_build(array &$entity_types) {
   $entity_types['node']->setFormClass('text_to_speak', 'Drupal\node\NodeForm');
   $entity_types['node']->setFormClass('generate_audio', 'Drupal\node\NodeForm');
 }
-
 
 /**
  * Form submit handler used for script edit tab.
