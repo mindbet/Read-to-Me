@@ -14,29 +14,33 @@ class ReadToMeSettingsForm extends ConfigFormBase {
    * Returns formid.
    *
    * @return formid
+   *   Returns formid.
    */
   public function getFormId() {
     return 'read_to_me_admin_settings';
 
-  //end getFormId()
+    // End getFormId()
   }
 
   /**
    * Returns key to module settings.
    *
    * @return settings
+   *   Returns key to module settings.
    */
   protected function getEditableConfigNames() {
     return ['read_to_me.settings'];
 
-  //end getEditableConfigNames()
+    // End getEditableConfigNames()
   }
 
   /**
    * Custom form.
    *
    * @param array $form
+   *   Form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   State of the form.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('read_to_me.settings');
@@ -66,14 +70,14 @@ class ReadToMeSettingsForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
-  //end buildForm()
+    // End buildForm()
   }
 
   /**
    * Validate the form.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-  //end validateForm()
+    // End validateForm()
   }
 
   /**
@@ -89,8 +93,8 @@ class ReadToMeSettingsForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
 
-  //end submitForm()
+    // End submitForm()
   }
 
-//end class
+  // End class.
 }

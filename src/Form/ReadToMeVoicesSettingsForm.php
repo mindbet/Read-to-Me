@@ -10,18 +10,21 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-
 /**
  * Configure example settings for this site.
  */
 class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
   /**
-   * @var LanguageManagerInterface
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
   protected $languageManager;
 
   /**
+   * Constructs a ReadToMeVoicesSettingsForm object.
+   *
    * ReadToMeVoicesSettingsForm constructor.
    */
   public function __construct(ConfigFactoryInterface $config_factory, LanguageManagerInterface $language_manager) {
@@ -39,25 +42,24 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       );
   }
 
-
   /**
    *
    * @return formid
-   * Returns formid.
+   *   Returns formid.
    */
   public function getFormId() {
     return 'read_to_me_voices_admin_settings';
-  //end getFormId()
+    // End getFormId()
   }
 
   /**
    *
    * @return settings
-   * Returns key to module settings.
+   *   Returns key to module settings.
    */
   protected function getEditableConfigNames() {
     return ['read_to_me.settings'];
-  //end getEditableConfigNames()
+    // End getEditableConfigNames()
   }
 
   /**
@@ -90,44 +92,42 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       ]);
     }
     catch (exception $e) {
-      dpm('cannot connect with Polly');
     }
     finally {
-      //optional code that always runs
+      // Optional code that always runs.
     }
 
     if ($language !== 'en') {
       $languagecrosswalk = [
-         'arb' => ['code' => 'ar', 'langname' => 'Arabic'],
-         'da-DK' => ['code' =>  'da', 'langname' => 'Danish'],
-         'nl-NL' => ['code' =>  'nl', 'langname' => 'Dutch'],
-         'en-US' => ['code' =>  'en', 'langname' => 'English, US'],
-         'en-AU' => ['code' =>  'en', 'langname' => 'English, Australian'],
-         'en-GB' => ['code' =>  'en', 'langname' => 'English, British'],
-         'en-IN' => ['code' =>  'en', 'langname' => 'English, Indian'],
-         'en-GB-WLS' => ['code' =>  'en', 'langname' => 'English, Welsh'],
-         'fr-FR' => ['code' =>  'fr', 'langname' => 'French'],
-         'fr-CA' => ['code' =>  'fr', 'langname' => 'French, Canadian'],
-         'de-DE' => ['code' =>  'de', 'langname' => 'German'],
-         'hi-IN' => ['code' =>  'hi', 'langname' => 'Hindi'],
-         'is-IS' => ['code' =>  'is', 'langname' => 'Icelandic'],
-         'it-IT' => ['code' =>  'it', 'langname' => 'Italian'],
-         'ja-JP' => ['code' =>  'ja', 'langname' => 'Japanese'],
-         'ko-KR' => ['code' =>  'ko', 'langname' => 'Korean'],
-         'nb-NO' => ['code' =>  'nb', 'langname' => 'Norwegian'],
-         'pl-PL' => ['code' =>  'pl', 'langname' => 'Polish'],
-         'pt-BR' => ['code' =>  'pt-br', 'langname' => 'Portuguese, Brazilian'],
-         'pt-PT' => ['code' =>  'pt-pt', 'langname' => 'Portuguese, European'],
-         'ro-RO' => ['code' =>  'ro', 'langname' => 'Romanian'],
-         'ru-RU' => ['code' =>  'ru', 'langname' => 'Russian'],
-         'es-US' => ['code' =>  'es', 'langname' => 'Spanish, US'],
-         'es-ES' => ['code' =>  'es', 'langname' => 'Spanish, European'],
-         'es-MX' => ['code' =>  'es', 'langname' => 'Spanish, Mexican'],
-         'sv-SE' => ['code' =>  'sv', 'langname' => 'Swedish'],
-         'tr-TR' => ['code' =>  'tr', 'langname' => 'Turkish'],
-         'cy-GB' => ['code' =>  'cy', 'langname' => 'Welsh'],
+        'arb' => ['code' => 'ar', 'langname' => 'Arabic'],
+        'da-DK' => ['code' => 'da', 'langname' => 'Danish'],
+        'nl-NL' => ['code' => 'nl', 'langname' => 'Dutch'],
+        'en-US' => ['code' => 'en', 'langname' => 'English, US'],
+        'en-AU' => ['code' => 'en', 'langname' => 'English, Australian'],
+        'en-GB' => ['code' => 'en', 'langname' => 'English, British'],
+        'en-IN' => ['code' => 'en', 'langname' => 'English, Indian'],
+        'en-GB-WLS' => ['code' => 'en', 'langname' => 'English, Welsh'],
+        'fr-FR' => ['code' => 'fr', 'langname' => 'French'],
+        'fr-CA' => ['code' => 'fr', 'langname' => 'French, Canadian'],
+        'de-DE' => ['code' => 'de', 'langname' => 'German'],
+        'hi-IN' => ['code' => 'hi', 'langname' => 'Hindi'],
+        'is-IS' => ['code' => 'is', 'langname' => 'Icelandic'],
+        'it-IT' => ['code' => 'it', 'langname' => 'Italian'],
+        'ja-JP' => ['code' => 'ja', 'langname' => 'Japanese'],
+        'ko-KR' => ['code' => 'ko', 'langname' => 'Korean'],
+        'nb-NO' => ['code' => 'nb', 'langname' => 'Norwegian'],
+        'pl-PL' => ['code' => 'pl', 'langname' => 'Polish'],
+        'pt-BR' => ['code' => 'pt-br', 'langname' => 'Portuguese, Brazilian'],
+        'pt-PT' => ['code' => 'pt-pt', 'langname' => 'Portuguese, European'],
+        'ro-RO' => ['code' => 'ro', 'langname' => 'Romanian'],
+        'ru-RU' => ['code' => 'ru', 'langname' => 'Russian'],
+        'es-US' => ['code' => 'es', 'langname' => 'Spanish, US'],
+        'es-ES' => ['code' => 'es', 'langname' => 'Spanish, European'],
+        'es-MX' => ['code' => 'es', 'langname' => 'Spanish, Mexican'],
+        'sv-SE' => ['code' => 'sv', 'langname' => 'Swedish'],
+        'tr-TR' => ['code' => 'tr', 'langname' => 'Turkish'],
+        'cy-GB' => ['code' => 'cy', 'langname' => 'Welsh'],
       ];
-
 
       foreach ($languagecrosswalk as $key => $value) {
         if ($value['code'] == $language) {
@@ -139,26 +139,21 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       $form['language_id'] = [
         '#type' => 'item',
         '#title' => $this
-          ->t('Site language detected: ' . $sitelanguagenameforpolly),
+//          ->t('Site language detected:' . $sitelanguagenameforpolly),
+          ->t('Site language detected: %sitelanguagenameforpolly', array('%sitelanguagenameforpolly' => $sitelanguagenameforpolly)),
+      ];
 
-
-        ];
-
-
-        $result = $client->describeVoices([
+      $result = $client->describeVoices([
         'Engine' => 'standard',
         'IncludeAdditionalLanguageCodes' => TRUE,
         'LanguageCode' => $sitelanguageforpolly,
-        ]);
-
+      ]);
 
       $voiceselectlist = [];
 
       foreach ($result['Voices'] as $voicevalue) {
         $voiceselectlist[$voicevalue['Id']] = $voicevalue['Name'];
       }
-
-
 
       $form['voice_selection'] = [
         '#type'          => 'radios',
@@ -173,61 +168,61 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
     else {
 
-    $form['voice_selection'] = [
-      '#type'          => 'radios',
-      '#required'      => TRUE,
-      '#title'         => $this->t('Voice'),
-      '#description'   => $this->t('The synthetic voice to use for generation.'),
-      '#options' => [
-        'Ivy' => $this->t('Ivy <span>[Female, child, standard]</span>'),
-        'Joanna' => $this->t('Joanna <span>[Female, neural or standard, conversational or newscaster available]</span>'),
-        'Kendra' => $this->t('Kendra <span>[Female, standard]</span>'),
-        'Kimberly' => $this->t('Kimberly <span>[Female, standard]</span>'),
-        'Salli' => $this->t('Salli <span>[Female, standard]</span>'),
-        'Joey' => $this
-          ->t('Joey <span>[Male, standard]</span>'),
-        'Justin' => $this
-          ->t('Justin <span>[Male, child]</span>'),
-        'Kevin' => $this
-          ->t('Kevin <span>[Male, child, neural only]</span>'),
-        'Matthew' => $this
-          ->t('Matthew <span>[Male, neural or standard, conversational or newscaster available]</span>'),
-      ],
-      '#default_value' => $config->get('voice_selection'),
+      $form['voice_selection'] = [
+        '#type'          => 'radios',
+        '#required'      => TRUE,
+        '#title'         => $this->t('Voice'),
+        '#description'   => $this->t('The synthetic voice to use for generation.'),
+        '#options' => [
+          'Ivy' => $this->t('Ivy <span>[Female, child, standard]</span>'),
+          'Joanna' => $this->t('Joanna <span>[Female, neural or standard, conversational or newscaster available]</span>'),
+          'Kendra' => $this->t('Kendra <span>[Female, standard]</span>'),
+          'Kimberly' => $this->t('Kimberly <span>[Female, standard]</span>'),
+          'Salli' => $this->t('Salli <span>[Female, standard]</span>'),
+          'Joey' => $this
+            ->t('Joey <span>[Male, standard]</span>'),
+          'Justin' => $this
+            ->t('Justin <span>[Male, child]</span>'),
+          'Kevin' => $this
+            ->t('Kevin <span>[Male, child, neural only]</span>'),
+          'Matthew' => $this
+            ->t('Matthew <span>[Male, neural or standard, conversational or newscaster available]</span>'),
+        ],
+        '#default_value' => $config->get('voice_selection'),
 
-    ];
+      ];
 
-    $form['voice_generation'] = [
-      '#type'          => 'radios',
-      '#title'         => $this->t('Generation method'),
-      '#description'   => $this->t('Neural (more life-like) is $16 per million characters. Standard method is $4 per million characters.'),
-      '#options' => [
-        'neural' => $this->t('Neural'),
-        'standard' => $this->t('Standard'),
-      ],
-      '#default_value' => $config->get('voice_generation'),
-      '#states' => [
-        'visible' => [
+      $form['voice_generation'] = [
+        '#type'          => 'radios',
+        '#title'         => $this->t('Generation method'),
+        '#description'   => $this->t('Neural (more life-like) is $16 per million characters. Standard method is $4 per million characters.'),
+        '#options' => [
+          'neural' => $this->t('Neural'),
+          'standard' => $this->t('Standard'),
+        ],
+        '#default_value' => $config->get('voice_generation'),
+        '#states' => [
+          'visible' => [
           [':input[name="voice_selection"]' => ['value' => 'Joanna']],
           [':input[name="voice_selection"]' => ['value' => 'Matthew']],
+          ],
         ],
-      ],
-    ];
+      ];
 
-    $form['voice_style'] = [
-      '#type'          => 'radios',
-      '#title'         => $this->t('Voice style'),
-      '#options' => [
-        'newscaster' => $this
-          ->t('Newscaster'),
-        'conversational' => $this
-          ->t('Conversational'),
-        'nostyle' => $this
-          ->t('No applied style'),
-      ],
-      '#default_value' => $config->get('voice_style'),
-      '#states' => [
-        'visible' => [
+      $form['voice_style'] = [
+        '#type'          => 'radios',
+        '#title'         => $this->t('Voice style'),
+        '#options' => [
+          'newscaster' => $this
+            ->t('Newscaster'),
+          'conversational' => $this
+            ->t('Conversational'),
+          'nostyle' => $this
+            ->t('No applied style'),
+        ],
+        '#default_value' => $config->get('voice_style'),
+        '#states' => [
+          'visible' => [
           [
             ':input[name="voice_selection"]' => ['value' => 'Joanna'],
             ':input[name="voice_generation"]' => ['value' => 'neural'],
@@ -236,21 +231,21 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
             ':input[name="voice_selection"]' => ['value' => 'Matthew'],
             ':input[name="voice_generation"]' => ['value' => 'neural'],
           ],
+          ],
         ],
-      ],
-    ];
+      ];
     }
 
     return parent::buildForm($form, $form_state);
 
-  //end buildForm()
+    // End buildForm()
   }
 
   /**
    * Validate the form.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-  //end validateForm()s
+    // End validateForm()s
   }
 
   /**
@@ -275,4 +270,5 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
   }//end submitForm()
+
 }
