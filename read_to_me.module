@@ -203,10 +203,9 @@ function read_to_me_entity_type_build(array &$entity_types) {
 /**
  * Form submit handler used for script edit tab.
  */
+
+
 function _read_to_me_node_submit_redirect($form, &$form_state) {
-  if (isset($_GET['destination'])) {
-    unset($_GET['destination']);
-  }
   $nodeid = $form_state->getformObject()->getEntity()->id();
   $form_state->setRedirect('read_to_me.script.edit', ['node' => $nodeid]);
 }

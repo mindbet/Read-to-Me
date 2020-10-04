@@ -21,7 +21,6 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
    */
   protected $languageManager;
 
-
   /**
    * ReadToMeVoicesSettingsForm constructor.
    */
@@ -81,63 +80,98 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       'region' => 'us-east-1',
     ]);
 
-
-//    $langcodes = \Drupal::languageManager()->getLanguages();
-    $langcodes = $this->languageManager->getLanguages();
-
-    $langcodesList = array_keys($langcodes);
-
-//    $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
     $language = $this->languageManager->getCurrentLanguage()->getId();
 
+    try {
+      $result = $client->describeVoices([
+        'Engine' => 'standard',
+        'IncludeAdditionalLanguageCodes' => TRUE,
+        'LanguageCode' => 'en-US',
+      ]);
+    }
+    catch (exception $e) {
+      dpm('cannot connect with Polly');
+    }
+    finally {
+      //optional code that always runs
+    }
 
-    $languagecrosswalk = [
-      'ar' => 'arb',
-      '' => 'cmn-CN',
-      'da' => 'da-DK',
-      'nl' => 'nl-NL',
-      'en' => 'en-AU',
-      'en' => 'en-GB',
-      'en' => 'en-IN',
-      'en' => 'en-US',
-      'en' => 'en-GB-WLS',
-      'fr' => 'fr-CA',
-      'fr' => 'fr-FR',
-      'de' => 'de-DE',
-      'hi' => 'hi-IN',
-      'is' => 'is-IS',
-      'es' => 'es-ES',
-      'es' => 'es-MX',
-      'es' => 'es-US',
-      'it' => 'it-IT',
-      'ja' => 'ja-JP',
-      'ko' => 'ko-KR',
-      'nb' => 'nb-NO',
-      'pl' => 'pl-PL',
-      'pt' => 'pt-BR',
-      'pt' => 'pt-PT',
-      'ro' => 'ro-RO',
-      'ru' => 'ru-RU',
-      'sv' => 'sv-SE',
-      'tr' => 'tr-TR',
-      'zh-hans' => 'tr-TR',
-      'zh-hant' => 'tr-TR',
-      '' => '',
-    ];
-
-    dpm($langcodesList);
-
-    dpm($language);
+    if ($language !== 'en') {
+      $languagecrosswalk = [
+         'arb' => ['code' => 'ar', 'langname' => 'Arabic'],
+         'da-DK' => ['code' =>  'da', 'langname' => 'Danish'],
+         'nl-NL' => ['code' =>  'nl', 'langname' => 'Dutch'],
+         'en-US' => ['code' =>  'en', 'langname' => 'English, US'],
+         'en-AU' => ['code' =>  'en', 'langname' => 'English, Australian'],
+         'en-GB' => ['code' =>  'en', 'langname' => 'English, British'],
+         'en-IN' => ['code' =>  'en', 'langname' => 'English, Indian'],
+         'en-GB-WLS' => ['code' =>  'en', 'langname' => 'English, Welsh'],
+         'fr-FR' => ['code' =>  'fr', 'langname' => 'French'],
+         'fr-CA' => ['code' =>  'fr', 'langname' => 'French, Canadian'],
+         'de-DE' => ['code' =>  'de', 'langname' => 'German'],
+         'hi-IN' => ['code' =>  'hi', 'langname' => 'Hindi'],
+         'is-IS' => ['code' =>  'is', 'langname' => 'Icelandic'],
+         'it-IT' => ['code' =>  'it', 'langname' => 'Italian'],
+         'ja-JP' => ['code' =>  'ja', 'langname' => 'Japanese'],
+         'ko-KR' => ['code' =>  'ko', 'langname' => 'Korean'],
+         'nb-NO' => ['code' =>  'nb', 'langname' => 'Norwegian'],
+         'pl-PL' => ['code' =>  'pl', 'langname' => 'Polish'],
+         'pt-BR' => ['code' =>  'pt-br', 'langname' => 'Portuguese, Brazilian'],
+         'pt-PT' => ['code' =>  'pt-pt', 'langname' => 'Portuguese, European'],
+         'ro-RO' => ['code' =>  'ro', 'langname' => 'Romanian'],
+         'ru-RU' => ['code' =>  'ru', 'langname' => 'Russian'],
+         'es-US' => ['code' =>  'es', 'langname' => 'Spanish, US'],
+         'es-ES' => ['code' =>  'es', 'langname' => 'Spanish, European'],
+         'es-MX' => ['code' =>  'es', 'langname' => 'Spanish, Mexican'],
+         'sv-SE' => ['code' =>  'sv', 'langname' => 'Swedish'],
+         'tr-TR' => ['code' =>  'tr', 'langname' => 'Turkish'],
+         'cy-GB' => ['code' =>  'cy', 'langname' => 'Welsh'],
+      ];
 
 
+      foreach ($languagecrosswalk as $key => $value) {
+        if ($value['code'] == $language) {
+          $sitelanguageforpolly = $key;
+          $sitelanguagenameforpolly = $value['langname'];
+        }
+      }
 
-    $result = $client->describeVoices([
-      'Engine' => 'standard',
-      'IncludeAdditionalLanguageCodes' => TRUE,
-      'LanguageCode' => 'da-DK',
-    ]);
+      $form['language_id'] = [
+        '#type' => 'item',
+        '#title' => $this
+          ->t('Site language detected: ' . $sitelanguagenameforpolly),
 
-    dpm($result);
+
+        ];
+
+
+        $result = $client->describeVoices([
+        'Engine' => 'standard',
+        'IncludeAdditionalLanguageCodes' => TRUE,
+        'LanguageCode' => $sitelanguageforpolly,
+        ]);
+
+
+      $voiceselectlist = [];
+
+      foreach ($result['Voices'] as $voicevalue) {
+        $voiceselectlist[$voicevalue['Id']] = $voicevalue['Name'];
+      }
+
+
+
+      $form['voice_selection'] = [
+        '#type'          => 'radios',
+        '#required'      => TRUE,
+        '#title'         => $this->t('Voice'),
+        '#description'   => $this->t('The synthetic voice to use for generation.'),
+        '#options' => $voiceselectlist,
+        '#default_value' => $config->get('voice_selection'),
+      ];
+
+    }
+
+    else {
 
     $form['voice_selection'] = [
       '#type'          => 'radios',
@@ -205,6 +239,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
         ],
       ],
     ];
+    }
 
     return parent::buildForm($form, $form_state);
 
@@ -232,9 +267,6 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     }
 
     $this->configFactory->getEditable('read_to_me.settings')
-      ->set('key', $form_state->getValue('key'))
-      ->set('aws_access_key_id', $form_state->getValue('aws_access_key_id'))
-      ->set('aws_secret_access_key', $form_state->getValue('aws_secret_access_key'))
       ->set('voice_selection', $form_state->getValue('voice_selection'))
       ->set('voice_generation', $voice_generation_value)
       ->set('voice_style', $voice_style_value)
