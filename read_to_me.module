@@ -111,7 +111,7 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
       // Load current node.
       $node = Node::load($currentNodeID);
 
-      // Convert body to plain text.
+      // Load the script field.
       $textproc = $node->get('field_script')->value;
 
       // Set audio title from node title.
