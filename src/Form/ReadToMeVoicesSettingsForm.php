@@ -43,6 +43,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
   }
 
   /**
+   * Supplies form id.
    *
    * @return formid
    *   Returns formid.
@@ -53,6 +54,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
   }
 
   /**
+   * Function needed to edit config settings.
    *
    * @return settings
    *   Returns key to module settings.
@@ -63,10 +65,12 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
   }
 
   /**
-   * Custom form.
+   * The form to collect AWS credentials.
    *
    * @param array $form
+   *   Custom form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The contents of the form.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
@@ -139,8 +143,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       $form['language_id'] = [
         '#type' => 'item',
         '#title' => $this
-//          ->t('Site language detected:' . $sitelanguagenameforpolly),
-          ->t('Site language detected: %sitelanguagenameforpolly', array('%sitelanguagenameforpolly' => $sitelanguagenameforpolly)),
+          ->t('Site language detected: %sitelanguagenameforpolly', ['%sitelanguagenameforpolly' => $sitelanguagenameforpolly]),
       ];
 
       $result = $client->describeVoices([
@@ -270,5 +273,4 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
   }//end submitForm()
-
 }

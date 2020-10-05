@@ -31,7 +31,6 @@ function read_to_me_help($route_name, RouteMatchInterface $route_match) {
 }
 
 // Modifies node_article_edit_form.
-
 /**
  * Implements hook_form_form_id_alter().
  */
@@ -43,14 +42,14 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
     $form['field_message'] = [
       '#type' => 'item',
       '#title' => t('How to create the audio version'),
-      '#markup' => t('Click the Copy button below to load the body field into the script. It will be converted to plain text. <br />The original body field will not be changed. Edit and save the script, then switch to the Audio tab to generate speech. <br />You may use <a href="https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html">SSML tags</a> to customize the voice output.'),
+      '#markup' => t('Click the Copy button below to load the body field into the script. It will be converted to plain text. <br />The original body field will not be changed. Edit and save the script, then switch to the Audio tab to generate speech.'),
       '#weight' => 0,
     ];
 
     $form['copytexttoplain'] = [
       '#type' => 'submit',
       '#title' => t('Copy body to script field'),
-      '#weight' => 0,
+      '#weight' => 3,
       '#value' => t('Copy'),
       '#ajax' => [
         'callback' => 'copytoplainmod',
@@ -92,10 +91,33 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
   // This section of the form used for converting script to audio file.
   if ($form_state->getFormObject()->getOperation() == 'generate_audio') {
 
+    // Get current node id.
+    $currentNodeID = \Drupal::routeMatch()->getRawParameter('node');
+
+    // Load current node.
+    $node = Node::load($currentNodeID);
+
+    // Set audio title from node title.
+    $audiotitle = $node->get('title')->value;
+    // Convert to lower case.
+    $audiotitle = preg_replace('@[^a-z0-9-]+@', '-', strtolower($audiotitle));
+    // Get current date and time for media label.
+    $createddate = new DrupalDateTime('now');
+    $createddate = $createddate->format('Y-m-d_H-i');
+    // Build media label.
+    $audiotitle = $audiotitle . '_' . $createddate;
+
+    $form['audiotitlelabel'] = [
+      '#type' => 'textfield',
+      '#title' => t('Filename for generated MP3 file'),
+      '#weight' => 2,
+      '#default_value' => $audiotitle,
+    ];
+
     $form['plaintoaudio'] = [
       '#type' => 'submit',
       '#title' => t('Convert script to audio'),
-      '#weight' => 1,
+      '#weight' => 3,
       '#value' => t('Convert'),
       '#submit' => ['convertoaudio'],
     ];
@@ -103,7 +125,9 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
     /**
      * {@inheritdoc}
      */
-    function convertoaudio() {
+    function convertoaudio($form, FormStateInterface $form_state) {
+
+      $audiotitle = $form_state->getValues()['audiotitlelabel'];
 
       // Get current node id.
       $currentNodeID = \Drupal::routeMatch()->getRawParameter('node');
@@ -114,15 +138,7 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
       // Load the script field.
       $textproc = $node->get('field_script')->value;
 
-      // Set audio title from node title.
-      $audiotitle = $node->get('title')->value;
-      // Convert to lower case.
-      $audiotitle = preg_replace('@[^a-z0-9-]+@', '-', strtolower($audiotitle));
-      // Get current date and time for media label.
-      $createddate = new DrupalDateTime('now');
-      $createddate = $createddate->format('Y-m-d_H-i');
-      // Build media label.
-      $audiotitle = $audiotitle . '_' . $createddate;
+
 
       // Prepare to send file to Amazon Polly.
       $awsAccessKeyId = \Drupal::config('read_to_me.settings')->get('aws_access_key_id');
@@ -150,14 +166,11 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
 
       $result = $client->StartSpeechSynthesisTask([
         'Engine'             => $pollyengine,
-      // 'Engine'             => 'standard',
         'OutputS3BucketName' => $s3bucket,
         'OutputFormat'       => 'mp3',
         'Text'               => $textproc,
-      // 'SampleRate'   => '24000',
         'TextType'           => 'text',
         'VoiceId'            => $voice_selection,
-      // 'VoiceId'            => 'Mads',
       ]);
 
       $resultData = $result->get('SynthesisTask');
@@ -187,7 +200,6 @@ function read_to_me_form_node_form_alter(&$form, FormStateInterface &$form_state
 }
 
 // Sets up the custom form modes for creating scripts and converting to audio.
-
 /**
  * Implements hook_entity_type_build().
  */
@@ -198,7 +210,6 @@ function read_to_me_entity_type_build(array &$entity_types) {
 
 /**
  * Form submit handler used for script edit tab.
- *
  */
 function _read_to_me_node_submit_redirect($form, &$form_state) {
   $nodeid = $form_state->getformObject()->getEntity()->id();
