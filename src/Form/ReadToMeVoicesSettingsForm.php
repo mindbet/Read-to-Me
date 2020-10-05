@@ -123,6 +123,9 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
         'cy-GB' => ['code' => 'cy', 'langname' => 'Welsh'],
       ];
 
+      // Set null default for site language.
+      $sitelanguageforpolly = NULL;
+
       // Using Drupal language, look up Polly voices.
       foreach ($languagecrosswalk as $key => $value) {
         if ($value['code'] == $language) {
