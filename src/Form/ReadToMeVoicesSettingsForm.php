@@ -76,6 +76,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
     $config = $this->config('read_to_me.settings');
 
+    // Load AWS keys from config.
     $awsAccessKeyId = $this->config('read_to_me.settings')->get('aws_access_key_id');
     $awsSecretKey = $this->config('read_to_me.settings')->get('aws_secret_access_key');
 
@@ -86,21 +87,10 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       'region' => 'us-east-1',
     ]);
 
+    // Get current language from Drupal site.
     $language = $this->languageManager->getCurrentLanguage()->getId();
 
-    try {
-      $result = $client->describeVoices([
-        'Engine' => 'standard',
-        'IncludeAdditionalLanguageCodes' => TRUE,
-        'LanguageCode' => 'en-US',
-      ]);
-    }
-    catch (exception $e) {
-    }
-    finally {
-      // Optional code that always runs.
-    }
-
+    // If not English, see if Polly has voices available.
     if ($language !== 'en') {
       $languagecrosswalk = [
         'arb' => ['code' => 'ar', 'langname' => 'Arabic'],
@@ -133,6 +123,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
         'cy-GB' => ['code' => 'cy', 'langname' => 'Welsh'],
       ];
 
+      // Using Drupal language, look up Polly voices.
       foreach ($languagecrosswalk as $key => $value) {
         if ($value['code'] == $language) {
           $sitelanguageforpolly = $key;
@@ -140,12 +131,25 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
         }
       }
 
-      $form['language_id'] = [
-        '#type' => 'item',
-        '#title' => $this
-          ->t('Site language detected: %sitelanguagenameforpolly', ['%sitelanguagenameforpolly' => $sitelanguagenameforpolly]),
-      ];
+      // If Polly voices not found for this language, default to English.
+      if (is_null($sitelanguageforpolly)) {
+        $form['language_warning'] = [
+          '#type' => 'item',
+          '#title' => $this
+            ->t('Polly does not have voices for this language; defaulting to US English.'),
+        ];
+        $sitelanguageforpolly = 'en-US';
+      }
+      else {
+        // Otherwise display Drupal language.
+        $form['language_id'] = [
+          '#type' => 'item',
+          '#title' => $this
+            ->t('Site language detected: %sitelanguagenameforpolly', ['%sitelanguagenameforpolly' => $sitelanguagenameforpolly]),
+        ];
+      }
 
+      // Use Polly API to look up voices for the site language.
       $result = $client->describeVoices([
         'Engine' => 'standard',
         'IncludeAdditionalLanguageCodes' => TRUE,
@@ -154,10 +158,12 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
       $voiceselectlist = [];
 
+      // Build voices select array.
       foreach ($result['Voices'] as $voicevalue) {
         $voiceselectlist[$voicevalue['Id']] = $voicevalue['Name'];
       }
 
+      // Form element to select voice.
       $form['voice_selection'] = [
         '#type'          => 'radios',
         '#required'      => TRUE,
@@ -171,6 +177,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
 
     else {
 
+      // Voice select form if English is default language for Drupal.
       $form['voice_selection'] = [
         '#type'          => 'radios',
         '#required'      => TRUE,
@@ -198,7 +205,7 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
       $form['voice_generation'] = [
         '#type'          => 'radios',
         '#title'         => $this->t('Generation method'),
-        '#description'   => $this->t('Neural (more life-like) is $16 per million characters. Standard method is $4 per million characters.'),
+        '#description'   => $this->t('Neural (more life-like) is $16 per million characters. Standard method is $4 per million characters. Prices as of October 2020.'),
         '#options' => [
           'neural' => $this->t('Neural'),
           'standard' => $this->t('Standard'),
@@ -273,4 +280,5 @@ class ReadToMeVoicesSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
   }//end submitForm()
+
 }
